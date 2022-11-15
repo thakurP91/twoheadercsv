@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="70abb437-06f9-47fb-a869-7b7da89fe98a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="twoheadercsvFlow" doc:id="5073a953-9705-4cdc-8e43-a5e62d62d58f" >
+		<http:listener doc:name="Listener" doc:id="ac6bfeca-cfb2-49ca-9a5f-f0cc901d5b9c" config-ref="HTTP_Listener_config" path="/test"/>
+		<ee:transform doc:name="Transform Message" doc:id="1e442f69-62c3-4357-8ff1-c3e51c585bcb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+{
+"registration no":"123",
+"name" : "Manoj",
+"class": "EE",
+"section": "A1"
+},
+{
+"registration no":"124",
+"name" : "Rahul",
+"class": "CE",
+"section" : "B1"
+},
+{
+"registration no":"243",
+"name" : "Ritik",
+"class": "ME",
+"section" : "E1"
+}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="73aaa254-9a0a-46d0-837d-656e46843503">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="a"><![CDATA[%dw 2.0
+output application/csv header = true
+---
+payload map (r, i) -> {
+	"registration no" : r."registration no",
+	"name": r.name,
+	"class" : r.class,
+	"section" : r.section
+	
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="82ae74e8-7f4a-47b8-b05c-21116b51a46c">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="b"><![CDATA[%dw 2.0
+output application/csv header = true
+---
+[{
+	"registration no" : "registration no",
+	"name": "name",
+	"class" : "class",
+	"section" : "section"
+	
+}]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="5f72bba9-ab21-4f9f-9937-827816719c77" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="c" ><![CDATA[%dw 2.0
+output application/csv header = true
+---
+[{
+	"REGISTARTION NO" : "registration no",
+	"NAME": "name",
+	"CLASS" : "class",
+	"SECTION" : "section"
+	
+}]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="bf556275-df93-4b64-82a7-cf90b0147e24" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header = true
+---
+vars.c ++ vars.a]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="f5b3ad48-db17-45cb-afae-addb3e1e57b7" path="C:\Users\PARDKUMA\Documents\output.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b448392e-5f65-4f81-bdff-bdb67c5b5150" message="log payload : #[payload]"/>
+	</flow>
+</mule>
